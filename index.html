@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Library System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .book-card, .reward-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .book-card:hover, .reward-card:hover {
+            transform: translateY(-5px);
+        }
+        .dark-mode {
+            background-color: #1f2937;
+            color: #f9fafb;
+        }
+        .dark-mode .card {
+            background-color: #374151;
+            color: #f9fafb;
+            border-color: #4b5563;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            animation: slideDown 0.3s ease;
+        }
+        .dark-mode .modal-content {
+            background-color: #374151;
+            color: white;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 transition-colors duration-300">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold"><i class="fas fa-book mr-2"></i>Online Library</h1>
+            <div class="flex gap-4 items-center">
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-blue-700 transition-colors" title="Toggle Dark Mode">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
+                <button onclick="openSettings()" class="p-2 rounded-full hover:bg-blue-700 transition-colors" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button onclick="openProfile()" class="p-2 rounded-full hover:bg-blue-700 transition-colors" title="Profile">
+                    <i class="fas fa-user"></i>
+                </button>
+                <button onclick="openLoginModal()" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    Login
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Welcome Back</h3>
+                    <button onclick="closeLoginModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Social Login Buttons -->
+                <div class="space-y-4 mb-6">
+                    <button onclick="loginWithGoogle()" class="w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-3">
+                        <i class="fab fa-google"></i>
+                        Continue with Google
+                    </button>
+                    
+                    <button onclick="loginWithApple()" class="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-3">
+                        <i class="fab fa-apple"></i>
+                        Continue with Apple
+                    </button>
+
+                    <button onclick="loginWithFacebook()" class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors flex items-center justify-center gap-3">
+                        <i class="fab fa-facebook"></i>
+                        Continue with Facebook
+                    </button>
+                </div>
+
+                <div class="relative mb-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500 dark:bg-gray-700 dark:text-gray-300">Or continue with email</span>
+                    </div>
+                </div>
+
+                <!-- Email Login Form -->
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input type="email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white" placeholder="Enter your email">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Password</label>
+                        <input type="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white" placeholder="Enter your password">
+                    </div>
+                    <button type="button" onclick="loginWithEmail()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Don't have an account? 
+                        <button onclick="switchToRegister()" class="text-blue-600 hover:text-blue-700 font-semibold">Sign up</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Your Profile</h3>
+                    <button onclick="closeProfileModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="text-center mb-6">
+                    <div class="w-24 h-24 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <i class="fas fa-user text-white text-3xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold" id="userName">Guest User</h4>
+                    <p class="text-gray-600 dark:text-gray-300" id="userEmail">Not logged in</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg text-center">
+                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-300" id="profilePoints">0</p>
+                        <p class="text-gray-600 dark:text-gray-300">Points</p>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg text-center">
+                        <p class="text-2xl font-bold text-green-600 dark:text-green-300" id="profileBooks">0</p>
+                        <p class="text-gray-600 dark:text-gray-300">Books Read</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-history mr-3"></i>Reading History
+                    </button>
+                    <button class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-trophy mr-3"></i>Achievements
+                    </button>
+                    <button class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-cog mr-3"></i>Account Settings
+                    </button>
+                </div>
+
+                <button onclick="logout()" class="w-full mt-6 bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Settings</h3>
+                    <button onclick="closeSettingsModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Theme Settings -->
+                    <div>
+                        <h4 class="text-lg font-semibold mb-3">Appearance</h4>
+                        <div class="flex gap-4">
+                            <button onclick="setTheme('light')" class="flex-1 p-4 border-2 border-gray-300 rounded-lg text-center hover:border-blue-500 transition-colors">
+                                <i class="fas fa-sun text-2xl mb-2"></i>
+                                <p>Light</p>
+                            </button>
+                            <button onclick="setTheme('dark')" class="flex-1 p-4 border-2 border-gray-300 rounded-lg text-center hover:border-blue-500 transition-colors">
+                                <i class="fas fa-moon text-2xl mb-2"></i>
+                                <p>Dark</p>
+                            </button>
+                            <button onclick="setTheme('auto')" class="flex-1 p-4 border-2 border-gray-300 rounded-lg text-center hover:border-blue-500 transition-colors">
+                                <i class="fas fa-adjust text-2xl mb-2"></i>
+                                <p>Auto</p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div>
+                        <h4 class="text-lg font-semibold mb-3">Notifications</h4>
+                        <div class="space-y-3">
+                            <label class="flex items-center justify-between">
+                                <span>Email Notifications</span>
+                                <input type="checkbox" class="toggle" checked>
+                            </label>
+                            <label class="flex items-center justify-between">
+                                <span>Push Notifications</span>
+                                <input type="checkbox" class="toggle" checked>
+                            </label>
+                            <label class="flex items-center justify-between">
+                                <span>New Book Alerts</span>
+                                <input type="checkbox" class="toggle">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Privacy -->
+                    <div>
+                        <h4 class="text-lg font-semibold mb-3">Privacy</h4>
+                        <div class="space-y-3">
+                            <button class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                Privacy Policy
+                            </button>
+                            <button class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                Terms of Service
+                            </button>
+                            <button class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                Data Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20 transition-colors duration-300">
+        <div class="container mx-auto text-center">
+            <h2 class="text-5xl font-bold mb-4">Welcome to Digital Library</h2>
+            <p class="text-xl mb-8">Borrow books, earn points, and redeem exciting rewards!</p>
+            <div class="bg-white bg-opacity-20 rounded-lg p-6 inline-block">
+                <p class="text-2xl font-bold">🎯 Earn 20 points per book!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Books Section -->
+    <div class="container mx-auto py-12 px-4">
+        <h3 class="text-3xl font-bold text-center mb-8 dark:text-white">Available Books</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Book 1 -->
+            <div class="book-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-600">
+                <div class="w-full h-48 bg-blue-100 dark:bg-blue-900 rounded-lg mb-4 flex items-center justify-center">
+                    <i class="fas fa-book text-blue-500 dark:text-blue-300 text-6xl"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-2 dark:text-white">The Great Gatsby</h4>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">By F. Scott Fitzgerald</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Fiction • Classic</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-green-600 font-semibold">Available</span>
+                    <button onclick="borrowBook(1)" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Borrow +20 pts
+                    </button>
+                </div>
+            </div>
+
+            <!-- Book 2 -->
+            <div class="book-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-600">
+                <div class="w-full h-48 bg-green-100 dark:bg-green-900 rounded-lg mb-4 flex items-center justify-center">
+                    <i class="fas fa-book text-green-500 dark:text-green-300 text-6xl"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-2 dark:text-white">To Kill a Mockingbird</h4>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">By Harper Lee</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Fiction • Classic</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-green-600 font-semibold">Available</span>
+                    <button onclick="borrowBook(2)" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Borrow +20 pts
+                    </button>
+                </div>
+            </div>
+
+            <!-- Book 3 -->
+            <div class="book-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-600">
+                <div class="w-full h-48 bg-purple-100 dark:bg-purple-900 rounded-lg mb-4 flex items-center justify-center">
+                    <i class="fas fa-book text-purple-500 dark:text-purple-300 text-6xl"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-2 dark:text-white">1984</h4>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">By George Orwell</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Fiction • Dystopian</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-green-600 font-semibold">Available</span>
+                    <button onclick="borrowBook(3)" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Borrow +20 pts
+                    </button>
+                </div>
+            </div>
+
+            <!-- Book 4 -->
+            <div class="book-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-600">
+                <div class="w-full h-48 bg-red-100 dark:bg-red-900 rounded-lg mb-4 flex items-center justify-center">
+                    <i class="fas fa-book text-red-500 dark:text-red-300 text-6xl"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-2 dark:text-white">Pride and Prejudice</h4>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">By Jane Austen</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Fiction • Romance</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-green-600 font-semibold">Available</span>
+                    <button onclick="borrowBook(4)" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Borrow +20 pts
+                    </button>
+                </div>
+            </div>
+
+            <!-- Book 5 -->
+            <div class="book-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-600">
+                <div class="w-full h-48 bg-yellow-100 dark:bg-yellow-900 rounded-lg mb-4 flex items-center justify-center">
+                    <i class="fas fa-book text-yellow-500 dark:text-yellow-300 text-6xl"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-2 dark:text-white">The Hobbit</h4>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">By J.R.R. Tolkien</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Fantasy • Adventure</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-green-600 font-semibold">Available</span>
+                    <button onclick="borrowBook(5)" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Borrow +20 pts
+                    </button>
+                </div>
+            </div>
+
+            <!-- Book 6 -->
+            <div class="book-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-600">
+                <div class="w-full h-48 bg-indigo-100 dark:bg-indigo-900 rounded-lg mb-4 flex items-center justify-center">
+                    <i class="fas fa-book text-indigo-500 dark:text-indigo-300 text-6xl"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-2 dark:text-white">Harry Potter</h4>
+                <p class="text-gray-600 dark:text-gray-300 mb-2">By J.K. Rowling</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Fantasy • Magic</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-green-600 font-semibold">Available</span>
+                    <button onclick="borrowBook(6)" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Borrow +20 pts
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rewards Section -->
+    <div class="bg-gray-100 dark:bg-gray-800 py-12 transition-colors duration-300">
+        <div class="container mx-auto px-4">
+            <h3 class="text-3xl font-bold text-center mb-8 dark:text-white">Redeem Your Points</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Reward 1 -->
+                <div class="reward-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 text-center border-2 border-yellow-300">
+                    <i class="fas fa-utensils text-4xl text-yellow-500 mb-4"></i>
+                    <h4 class="text-xl font-bold mb-2 dark:text-white">Food Discount</h4>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">10% off on Zomato/Swiggy</p>
+                    <p class="text-2xl font-bold text-yellow-600 mb-4">100 pts</p>
+                    <button onclick="redeemReward(1)" class="bg-yellow-500 text-white px-4 py-2 rounded-lg w-full hover:bg-yellow-600 transition-colors">
+                        Redeem
+                    </button>
+                </div>
+
+                <!-- Reward 2 -->
+                <div class="reward-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 text-center border-2 border-red-300">
+                    <i class="fas fa-film text-4xl text-red-500 mb-4"></i>
+                    <h4 class="text-xl font-bold mb-2 dark:text-white">Movie Ticket</h4>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Discount on BookMyShow</p>
+                    <p class="text-2xl font-bold text-red-600 mb-4">200 pts</p>
+                    <button onclick="redeemReward(2)" class="bg-red-500 text-white px-4 py-2 rounded-lg w-full hover:bg-red-600 transition-colors">
+                        Redeem
+                    </button>
+                </div>
+
+                <!-- Reward 3 -->
+                <div class="reward-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 text-center border-2 border-green-300">
+                    <i class="fas fa-shopping-cart text-4xl text-green-500 mb-4"></i>
+                    <h4 class="text-xl font-bold mb-2 dark:text-white">Shopping Coupon</h4>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">15% off on groceries</p>
+                    <p class="text-2xl font-bold text-green-600 mb-4">150 pts</p>
+                    <button onclick="redeemReward(3)" class="bg-green-500 text-white px-4 py-2 rounded-lg w-full hover:bg-green-600 transition-colors">
+                        Redeem
+                    </button>
+                </div>
+
+                <!-- Reward 4 -->
+                <div class="reward-card bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 text-center border-2 border-blue-300">
+                    <i class="fas fa-gift text-4xl text-blue-500 mb-4"></i>
+                    <h4 class="text-xl font-bold mb-2 dark:text-white">Free Book</h4>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Get any book for free</p>
+                    <p class="text-2xl font-bold text-blue-600 mb-4">300 pts</p>
+                    <button onclick="redeemReward(4)" class="bg-blue-500 text-white px-4 py-2 rounded-lg w-full hover:bg-blue-600 transition-colors">
+                        Redeem
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Stats -->
+    <div class="container mx-auto py-12 px-4 text-center">
+        <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-8 max-w-2xl mx-auto transition-colors duration-300">
+            <h3 class="text-3xl font-bold mb-6 dark:text-white">Your Library Stats</h3>
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-300" id="pointsDisplay">0</p>
+                    <p class="text-gray-600 dark:text-gray-300">Total Points</p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg">
+                    <p class="text-2xl font-bold text-green-600 dark:text-green-300" id="booksDisplay">0</p>
+                    <p class="text-gray-600 dark:text-gray-300">Books Borrowed</p>
+                </div>
+            </div>
+            <div id="message" class="text-lg font-semibold min-h-8"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2024 Online Library System. All rights reserved.</p>
+            <p class="text-gray-400 mt-2">Read more, earn more! 📚</p>
+        </div>
+    </footer>
+
+    <!-- Message Display -->
+    <div id="message" class="fixed top-20 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm hidden"></div>
+
+    <script>
+        // User Data
+        let userData = {
+            loggedIn: false,
+            name: "Guest User",
+            email: "Not logged in",
+            points: 0,
+            booksRead: 0
+        };
+
+        // Theme Management
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.getElementById('darkModeIcon');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeIcon').className = 'fas fa-sun';
+            } else if (theme === 'light') {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('darkModeIcon').className = 'fas fa-moon';
+            }
+            localStorage.setItem('theme', theme);
+            closeSettingsModal();
+        }
+
+        // Modal Management
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
+        function openProfile() {
+            updateProfileDisplay();
+            document.getElementById('profileModal').style.display = 'block';
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').style.display = 'block';
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // Social Login Functions
+        function loginWithGoogle() {
+            userData = {
+                loggedIn: true,
+                name: "John Doe (Google)",
+                email: "john@gmail.com",
+                points: 150,
+                booksRead: 7
+            };
+            showMessage("✅ Successfully logged in with Google!", "green");
+            closeLoginModal();
+            updateProfileDisplay();
+            updateStatsDisplay();
+        }
+
+        function loginWithApple() {
+            userData = {
+                loggedIn: true,
+                name: "Jane Smith (Apple)",
+                email: "jane@icloud.com",
+                points: 200,
+                booksRead: 10
+            };
+            showMessage("✅ Successfully logged in with Apple!", "green");
+            closeLoginModal();
+            updateProfileDisplay();
+            updateStatsDisplay();
+        }
+
+        function loginWithFacebook() {
+            userData = {
+                loggedIn: true,
+                name: "Mike Johnson (Facebook)",
+                email: "mike@facebook.com",
+                points: 80,
+                booksRead: 4
+            };
+            showMessage("✅ Successfully logged in with Facebook!", "green");
+            closeLoginModal();
+            updateProfileDisplay();
+            updateStatsDisplay();
+        }
+
+        function loginWithEmail() {
+            userData = {
+                loggedIn: true,
+                name: "Email User",
+                email: "user@example.com",
+                points: 50,
+                booksRead: 2
+            };
+            showMessage("✅ Successfully logged in!", "green");
+            closeLoginModal();
+            updateProfileDisplay();
+            updateStatsDisplay();
+        }
+
+        function logout() {
+            userData = {
+                loggedIn: false,
+                name: "Guest User",
+                email: "Not logged in",
+                points: 0,
+                booksRead: 0
+            };
+            showMessage("👋 Successfully logged out!", "blue");
+            closeProfileModal();
+            updateProfileDisplay();
+            updateStatsDisplay();
+        }
+
+        function updateProfileDisplay() {
+            document.getElementById('userName').textContent = userData.name;
+            document.getElementById('userEmail').textContent = userData.email;
+            document.getElementById('profilePoints').textContent = userData.points;
+            document.getElementById('profileBooks').textContent = userData.booksRead;
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('pointsDisplay').textContent = userData.points;
+            document.getElementById('booksDisplay').textContent = userData.booksRead;
+        }
+
+        function switchToRegister() {
+            showMessage("📝 Registration feature coming soon!", "blue");
+        }
+
+        // Book Functions
+        function borrowBook(bookId) {
+            if (!userData.loggedIn) {
+                showMessage("🔐 Please login first to borrow books!", "red");
+                openLoginModal();
+                return;
+            }
+            userData.points += 20;
+            userData.booksRead++;
+            updateProfileDisplay();
+            updateStatsDisplay();
+            showMessage(`✅ Book #${bookId} borrowed! You earned 20 points.`, "green");
+        }
+
+        // Reward Functions
+        function redeemReward(rewardId) {
+            if (!userData.loggedIn) {
+                showMessage("🔐 Please login first to redeem rewards!", "red");
+                openLoginModal();
+                return;
+            }
+
+            const rewards = {
+                1: { name: 'Food Discount', cost: 100 },
+                2: { name: 'Movie Ticket', cost: 200 },
+                3: { name: 'Shopping Coupon', cost: 150 },
+                4: { name: 'Free Book', cost: 300 }
+            };
+
+            const reward = rewards[rewardId];
+            
+            if (userData.points >= reward.cost) {
+                userData.points -= reward.cost;
+                updateProfileDisplay();
+                updateStatsDisplay();
+                showMessage(`🎉 ${reward.name} redeemed successfully! Check your email for coupon code.`, "green");
+            } else {
+                showMessage(`❌ Not enough points! You need ${reward.cost} points but have only ${userData.points}.`, "red");
+            }
+        }
+
+        function showMessage(text, color) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `fixed top-20 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm bg-${color}-100 border border-${color}-400 text-${color}-700 dark:bg-${color}-900 dark:border-${color}-700 dark:text-${color}-300`;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 4000);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = ['loginModal', 'profileModal', 'settingsModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+        updateStatsDisplay();
+    </script>
+</body>
+</html>
